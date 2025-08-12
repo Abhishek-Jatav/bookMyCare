@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CUSTOMER
+  PROVIDER
+  ADMIN
+}
+
+model User {
+  id                 Int        @id @default(autoincrement())
+  name     String
+  email              String     @unique
+  password           String
+  role               Role       @default(CUSTOMER)
+
+  // Relations
+  providerAvailabilities Availability[] @relation("ProviderAvailability")
+  providerBookings       Booking[]      @relation("ProviderBookings")
+  customerBookings       Booking[]      @relation("CustomerBookings")
+}
+
+model Availability {
+  id          Int      @id @default(autoincrement())
+  date        DateTime
+  timeSlot    String
+  isBooked    Boolean  @default(false)
+
+  provider    User     @relation("ProviderAvailability", fields: [providerId], references: [id])
+  providerId  Int
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Booking {
+  id          Int      @id @default(autoincrement())
+  date        DateTime
+  timeSlot    String
+  status      String   @default("BOOKED") // BOOKED | CANCELLED
+
+  provider    User     @relation("ProviderBookings", fields: [providerId], references: [id])
+  providerId  Int
+
+  customer    User     @relation("CustomerBookings", fields: [customerId], references: [id])
+  customerId  Int
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
